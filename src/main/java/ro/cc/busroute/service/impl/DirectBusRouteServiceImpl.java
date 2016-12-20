@@ -4,20 +4,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.CommandLinePropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import ro.cc.busroute.BusRouteApplication;
 import ro.cc.busroute.service.DirectBusRouteService;
+import ro.cc.busroute.utils.FileUtils;
 
 import javax.annotation.PostConstruct;
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,7 +45,7 @@ public class DirectBusRouteServiceImpl implements DirectBusRouteService {
         }
 
         String busRouteDataFilePath = nonOptionArgs[0];
-//        FileUtils.writeToFile(busRouteDataFilePath);
+        FileUtils.getInstance().writeToFile(busRouteDataFilePath, 10000, 1000, 100000);
 
         try (Stream<String> stream = Files.lines(Paths.get(busRouteDataFilePath))) {
             routes = stream.map(line ->
@@ -73,20 +71,28 @@ public class DirectBusRouteServiceImpl implements DirectBusRouteService {
 
     @Override
     public Boolean directRoute(Integer depSid, Integer arrSid) {
-        return directRouteObviousAlgorithm(depSid, arrSid);
+        return routes.values().parallelStream()
+                .anyMatch(routeStations -> testStationsSuccessionInRoute(depSid, arrSid, routeStations));
     }
 
-    private Boolean directRouteObviousAlgorithm(Integer depSid, Integer arrSid) {
-        for (List<Integer> route : routes.values()) {
-            int depSidIndex = route.indexOf(depSid);
-            if (depSidIndex != -1) {
-                int arrSidIndex = route.indexOf(arrSid);
-                if (arrSidIndex > depSidIndex) {
-                    return true;
-                }
+    private boolean testStationsSuccessionInRoute(Integer depSid, Integer arrSid, List<Integer> routeStations) {
+        int depSidIndex = -1;
+        int arrSidIndex = -1;
+        Iterator<Integer> it = routeStations.iterator();
+        int index = 0;
+        while (it.hasNext()) {
+            Integer station = it.next();
+            if (station.equals(depSid)) {
+                depSidIndex = index;
+            } else if (station.equals(arrSid)) {
+                arrSidIndex = index;
             }
+            index++;
         }
 
+        if (arrSidIndex > depSidIndex) {
+            return true;
+        }
         return false;
     }
 
@@ -112,14 +118,18 @@ public class DirectBusRouteServiceImpl implements DirectBusRouteService {
             throw new RuntimeException("Duplicate station ids found in the same route!");
         }
 
+        logRouteCount();
+
+        return true;
+    }
+
+    private void logRouteCount() {
         synchronized (counter) {
             counter++;
             if (counter % 1000 == 0) {
                 System.out.println("Counter: " + counter);
             }
         }
-
-        return true;
     }
 
 }
