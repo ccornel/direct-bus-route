@@ -45,7 +45,6 @@ public class DirectBusRouteServiceImpl implements DirectBusRouteService {
         }
 
         String busRouteDataFilePath = nonOptionArgs[0];
-        FileUtils.getInstance().writeToFile(busRouteDataFilePath, 10000, 1000, 100000);
 
         try (Stream<String> stream = Files.lines(Paths.get(busRouteDataFilePath))) {
             routes = stream.map(line ->
