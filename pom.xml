@@ -29,6 +29,19 @@
         <developerConnection>scm:git:git:https://github.com/ccornel/direct-bus-route</developerConnection>
     </scm>
 
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <name>corporateish-repo-releases</name>
+            <url>http://136.243.221.234:9080/artifactory/corporateish-release-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>snapshots</id>
+            <name>corporateish-repo-snapshots</name>
+            <url>http://136.243.221.234:9080/artifactory/corporateish-snapshot-local</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -47,6 +60,31 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>external.atlassian.jgitflow</groupId>
+                <artifactId>jgitflow-maven-plugin</artifactId>
+                <version>1.0-m5.1</version>
+                <configuration>
+                    <pushReleases>true</pushReleases>
+                    <keepBranch>false</keepBranch>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <noTag>true</noTag>
+                    <allowUntracked>true</allowUntracked>
+                    <pullDevelop>true</pullDevelop>
+                    <pullMaster>true</pullMaster>
+                    <allowSnapshots>true</allowSnapshots>
+                    <flowInitContext>
+                        <masterBranchName>master</masterBranchName>
+                        <developBranchName>develop</developBranchName>
+                        <featureBranchPrefix>feature-</featureBranchPrefix>
+                        <releaseBranchPrefix>release-</releaseBranchPrefix>
+                        <hotfixBranchPrefix>hotfix-</hotfixBranchPrefix>
+                        <versionTagPrefix>version-</versionTagPrefix>
+                    </flowInitContext>
+                    <squash>true</squash>
+                    <scmCommentPrefix>[RELEASE] </scmCommentPrefix>
+                </configuration>
             </plugin>
         </plugins>
     </build>
